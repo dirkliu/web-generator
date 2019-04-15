@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+var shell = require('shelljs');
+var exec = require('child_process').exec;
+var name = process.argv[2];
+
+var child = exec('echo hello ' + name, function(err, stdout, stderr) {
+    if (err) throw err;
+    console.log(stdout);
+});
+
+console.log('init structure ---->')
+shell.mkdir('src')
+shell.touch('index.html')
+
