@@ -1,14 +1,29 @@
 #!/usr/bin/env node
-var shell = require('shelljs');
-var exec = require('child_process').exec;
-var name = process.argv[2];
+const fs = require('fs')
+const path = require('path')
 
-var child = exec('echo hello ' + name, function(err, stdout, stderr) {
-    if (err) throw err;
-    console.log(stdout);
-});
+let samplePath = '../sample'
+console.log('samplePath:', samplePath)
 
-console.log('init structure ---->')
-shell.mkdir('src')
-shell.touch('index.html')
+fs.readdir(samplePath, (err, files) => {
+  console.log('err:', err)
+  console.log('files:', files)
+  console.log('fs.Dirent:', fs.dirent)
+  files.forEach(file => {
+    // console.log(file.isFile())
+    let filePath = samplePath + '/'+ file
+    // fs.stat(samplePath + '/'+ file, (err, stats) => {
+    //   if (!err) {
+    //     stats.isFile() && fs.copyFileSync(filePath, file)
+    //     stats.isDirectory() && fs.mkdir(file)
+    //   }
+    // })
+    let stats = fs.statSync(samplePath + '/'+ file)
+    stats.isFile() && fs.copyFileSync(filePath, file)
+    stats.isDirectory() && fs.mkdirSync(file)
+  })
+})
+
+
+
 
