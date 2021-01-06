@@ -1,26 +1,23 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const path = require('path')
+const cwd = process.cwd()
 
-let samplePath = '../sample'
+let samplePath = path.resolve(__dirname, '../sample')
 console.log('samplePath:', samplePath)
 
 fs.readdir(samplePath, (err, files) => {
-  console.log('err:', err)
-  console.log('files:', files)
-  console.log('fs.Dirent:', fs.dirent)
+  let target = path.resolve(cwd, 'dist')
+  if (fs.existsSync(target)) {
+    fs.rmdirSync(target)
+  }
+  fs.mkdirSync(target)
   files.forEach(file => {
-    // console.log(file.isFile())
     let filePath = samplePath + '/'+ file
-    // fs.stat(samplePath + '/'+ file, (err, stats) => {
-    //   if (!err) {
-    //     stats.isFile() && fs.copyFileSync(filePath, file)
-    //     stats.isDirectory() && fs.mkdir(file)
-    //   }
-    // })
-    let stats = fs.statSync(samplePath + '/'+ file)
-    stats.isFile() && fs.copyFileSync(filePath, file)
-    stats.isDirectory() && fs.mkdirSync(file)
+    
+    let stats = fs.statSync(filePath)
+    stats.isFile() && fs.copyFileSync(filePath, target + '/' + file)
+    stats.isDirectory() && fs.mkdirSync(target + '/' + file)
   })
 })
 
