@@ -9,13 +9,13 @@ const rl = require('readline').createInterface({
 })
 
 const samplePath = path.resolve(__dirname, '../sample')
-const target = path.resolve(cwd, 'dist')
-if (fs.existsSync(target)) {
-  fs.rmdirSync(target, {
+const dist = path.resolve(cwd, 'dist')
+if (fs.existsSync(dist)) {
+  fs.rmdirSync(dist, {
     recursive: true
   })
 }
-fs.mkdirSync(target)
+fs.mkdirSync(dist)
 
 function inputTitle () {
   return new Promise((resolve, reject) => {
@@ -30,7 +30,7 @@ function  createHtml (title) {
     var file = filePath = samplePath + '/index.html'
     fs.readFile(file, 'utf8', (err, data) => {
       if (err) return fatal(err)
-      fs.open(target + '/index.html', 'w', (err, fd) => {
+      fs.open(dist + '/index.html', 'w', (err, fd) => {
         if (err) return fatal(err)
         fs.write(fd, data.replace(/\{\{title\}\}/g, title), (err) => {
           if (err) return fatal(err)
@@ -46,25 +46,58 @@ function  createHtml (title) {
 
 function copySrc () {
   return new Promise ((resolve, reject) => {
-    const src = path.resolve(target, 'src')
-    fs.mkdirSync(src)
-    fs.readdir(samplePath + '/src', (err, files) => {
-      if (err) fatal(err)
-      files.forEach(file => {
-        let filePath = samplePath + '/src/'+ file
-        let stats = fs.statSync(filePath)
-        stats.isFile() && fs.copyFileSync(filePath, src + '/' +file)
-        stats.isDirectory() && fs.mkdirSync(target + '/' + file)
-      })
-      resolve()
-    })
+    const src = path.resolve(samplePath, 'src')
+    const distSrc = path.resolve(dist, 'src')
+    fs.mkdirSync(distSrc)
+    copyDir(src, distSrc)
+    resolve()
+  })
+}
+
+function copyDir (src, dist) {
+  var files = fs.readdirSync(src)
+  files.forEach(file => {
+    let srcFile = path.resolve(src, file)
+    let distFile = path.resolve(dist, file)
+    let stats = fs.statSync(srcFile)
+    if (stats.isFile()) {
+      fs.createReadStream(srcFile).pipe(fs.createWriteStream(distFile))
+      // const readStream = fs.createReadStream(srcFile)
+      // const writeStream = fs.createWriteStream(distFile)
+      // readStream.pipe(writeStream);
+      // readStream.on('readable', () => {
+      //   console.log(srcFile, ' :read stream readable')
+      // })
+      // readStream.on('data', chunk => {
+      //   console.log(srcFile, ' :read stream data:', chunk)
+      // })
+      // readStream.on('end', () => {
+      //   console.log(srcFile, ' :read stream end')
+      // })
+
+      // writeStream.on('finish', () => {
+      //   console.log('writeStream finish')
+      // })
+
+      // writeStream.on('close', () => {
+      //   console.log('writeStream close')
+      // })
+
+      // writeStream.on('pipe', () => {
+      //   console.log('writeStream pipe')
+      // })
+    }
+    if (stats.isDirectory()) {
+      fs.mkdirSync(distFile)
+      copyDir(srcFile, distFile)
+    }
   })
 }
 
 function createConfigs(title) {
   return new Promise((resolve, reject) => {
     let now = Date.now()
-    fs.open(target + '/configs.js', 'w', (err, fd) => {
+    fs.open(dist + '/configs.js', 'w', (err, fd) => {
       if (err) return reject(err)
       fs.write(fd, 
 `export default {
