@@ -64,8 +64,10 @@ function copyDir (src, dist) {
       fs.createReadStream(srcFile).pipe(fs.createWriteStream(distFile))
       // const readStream = fs.createReadStream(srcFile)
       // const writeStream = fs.createWriteStream(distFile)
-      // readStream.pipe(writeStream);
+      
+      // readable事件，当调用 stream.read() 时才会触发 'data' 事件
       // readStream.on('readable', () => {
+      //   readStream.read()
       //   console.log(srcFile, ' :read stream readable')
       // })
       // readStream.on('data', chunk => {
@@ -86,6 +88,8 @@ function copyDir (src, dist) {
       // writeStream.on('pipe', () => {
       //   console.log('writeStream pipe')
       // })
+
+      // readStream.pipe(writeStream);
     }
     if (stats.isDirectory()) {
       fs.mkdirSync(distFile)
@@ -97,34 +101,39 @@ function copyDir (src, dist) {
 function createConfigs(title) {
   return new Promise((resolve, reject) => {
     let now = Date.now()
-    fs.open(dist + '/configs.js', 'w', (err, fd) => {
-      if (err) return reject(err)
-      fs.write(fd, 
-`export default {
-  title: "${title}",
-  name: "test",
-  level: 7,
-  time: ${now}
-}
-`, (err) => {
-        if (err) return fatal(err)
-        fs.close(fd, err => {
-          if (err) return fatal(err)
-          resolve(true)
-        })
-      })
-    })
+    // 1.直接使用文件api
+//     fs.open(dist + '/configs.js', 'w', (err, fd) => {
+//       if (err) return reject(err)
+//       fs.write(fd, 
+// `export default {
+//   title: "${title}",
+//   name: "test",
+//   level: 7,
+//   time: ${now}
+// }
+// `, (err) => {
+//         if (err) return fatal(err)
+//         fs.close(fd, err => {
+//           if (err) return fatal(err)
+//           resolve(true)
+//         })
+//       })
+//     })
+
+    // 2.使用可写流
+    const config = fs.createWriteStream(dist + '/configs.js')
+    config.write(`export default { \n`)
+    config.write(`  title: "${title}", \n`)
+    config.write(`  name: "test", \n`)
+    config.write(`  level: 7, \n`)
+    config.write(`  time: ${now}, \n`)
+    config.end(`}\n`)
+    resolve(true)
   })
 }
 
 async function run () {
-  // let title = await inputTitle().catch(err => {
-  //   console.log('input title:', err)
-  //   process.exit()
-  // })
-  // console.log('title:', title)
-  // if (!title) return
-  let title = 'webgen test'
+  let title = await inputTitle()
   Promise.all([
     createHtml(title),
     createConfigs(title),
@@ -139,4 +148,5 @@ function fatal (err) {
   process.exit()
 }
 
+// console.log('process.env', process.env)
 run()
