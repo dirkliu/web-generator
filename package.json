@@ -1,7 +1,7 @@
 {
   "name": "web-generator",
   "version": "1.0.0",
-  "description": "A generator of backstage",
+  "description": "A generator of web",
   "bin": {
     "webgen": "./bin/webgen"
   },

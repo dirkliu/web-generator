@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const fs = require('fs')
-const { resolve } = require('path')
 const path = require('path')
 const cwd = process.cwd()
 const rl = require('readline').createInterface({
@@ -98,7 +97,7 @@ function copyDir (src, dist) {
   })
 }
 
-function createConfigs(title) {
+function createConfig(title) {
   return new Promise((resolve, reject) => {
     let now = Date.now()
     // 1.直接使用文件api
@@ -121,7 +120,7 @@ function createConfigs(title) {
 //     })
 
     // 2.使用可写流
-    const config = fs.createWriteStream(dist + '/configs.js')
+    const config = fs.createWriteStream(dist + '/config.js')
     config.write(`export default { \n`)
     config.write(`  title: "${title}", \n`)
     config.write(`  name: "test", \n`)
@@ -132,11 +131,22 @@ function createConfigs(title) {
   })
 }
 
+function createPackageJson (name) {
+  let package = fs.createWriteStream(dist + '/package.json')
+  package.write(`{\n`)
+  package.write(` "name": "web-gen",\n`)
+  package.write(` "version": "1.0.0",\n`)
+  package.write(` "description": "${name}", \n`)
+  package.write(` "author": "Jason" \n`)
+  package.end(`}\n`)
+}
+
 async function run () {
   let title = await inputTitle()
+  createPackageJson(title)
   Promise.all([
     createHtml(title),
-    createConfigs(title),
+    createConfig(title),
     copySrc()
   ]).then(() => {
     process.exit()
@@ -145,7 +155,7 @@ async function run () {
 
 function fatal (err) {
   console.error(err)
-  process.exit()
+  process.exit(1)
 }
 
 // console.log('process.env', process.env)
